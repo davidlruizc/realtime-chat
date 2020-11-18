@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
-import { prop, Ref, Typegoose } from 'typegoose';
+import { prop, Ref } from '@typegoose/typegoose';
 import { User } from 'models/user.model';
 import { Room } from 'models/room.model';
 
-export class Message extends Typegoose {
+export class Message {
   _id: ObjectId | string;
 
   @prop({ required: true })
