@@ -5,6 +5,10 @@
 - NestJS
 - Web Sockets
 
+```sh
+npm start
+```
+
 ## Database
 
 - MongoDB
@@ -34,3 +38,20 @@ Stop the container
 cd db; docker-compose down
 ```
 
+## Mobile App
+
+- React Native
+
+Run the app acording the OS
+
+For iOS:
+
+```sh
+cd chatApp; npm run ios
+```
+
+For Android:
+
+```sh
+cd chatApp; npm run android 
+```
