@@ -5,25 +5,41 @@ import {
   View,
   Text,
   StatusBar,
-  TextInput,
   Button,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {useNavigation} from '@react-navigation/native';
 
-const Home = () => {
+const Rooms = () => {
+  const ROOM_NAME = 'room1';
   const navigation = useNavigation();
-  const [nickName, setNickName] = React.useState('');
 
-  const joinChat = async () => {
+  const [roomChat, setRoomChat] = React.useState(null);
+
+  const addRoom = async () => {
     try {
-      if (nickName !== '') {
-        await AsyncStorage.setItem('nickname', nickName);
-        navigation.navigate('Rooms');
-      }
+      const room = await fetch('http://localhost:3000/api/rooms', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({name: ROOM_NAME}),
+      });
+
+      const transoformRoomResponse = await room.json();
+      setRoomChat(transoformRoomResponse);
+      console.log(transoformRoomResponse);
     } catch (err) {
       throw new Error(err);
+    }
+  };
+
+  const joinRoom = () => {
+    if (roomChat !== null) {
+      navigation.navigate('Chat', roomChat._id);
+    } else {
+      navigation.navigate('Chat', '5fb6f5e6da1df1103546be6c');
     }
   };
 
@@ -32,15 +48,9 @@ const Home = () => {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionDescription}>
-            Set <Text style={styles.highlight}>Nickname:</Text>
-          </Text>
-          <TextInput
-            placeholder="Nickname"
-            style={styles.nickName}
-            onChangeText={(value) => setNickName(value)}
-          />
-          <Button title="Join now" onPress={joinChat} />
+          <Text style={styles.sectionTitle}>Choose a room</Text>
+          <Button title="Room 1" onPress={joinRoom} />
+          <Button title="Add Room" onPress={addRoom} />
         </View>
       </SafeAreaView>
     </>
@@ -94,4 +104,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Home;
+export default Rooms;
