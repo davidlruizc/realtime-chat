@@ -29,7 +29,6 @@ const Rooms = () => {
 
       const transoformRoomResponse = await room.json();
       setRoomChat(transoformRoomResponse);
-      console.log(transoformRoomResponse);
     } catch (err) {
       throw new Error(err);
     }
