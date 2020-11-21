@@ -3,9 +3,8 @@ import {GiftedChat} from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
 
-const socket = io('http://192.168.0.4:3001', {
+const socket = io('http://localhost:3001', {
   path: '/websockets',
-  withCredentials: false,
 });
 
 const Chat = ({navigation, route}) => {
@@ -59,9 +58,14 @@ const Chat = ({navigation, route}) => {
 
   const getMessages = React.useCallback(async () => {
     try {
+      //await socket.connected;
+      console.log(await socket.connected);
       const nickName = await AsyncStorage.getItem('nickname');
       setNicknameStorage(nickName);
-      socket.emit('enter-chat-room', {roomId: params, nickname: nickName});
+      await socket.emit('enter-chat-room', {
+        roomId: params,
+        nickname: nickName,
+      });
 
       const room = await roomsService();
 
@@ -89,9 +93,9 @@ const Chat = ({navigation, route}) => {
       });
       setMessages(chatData);
 
-      socket.on('message', (message) => messages.push(message));
+      await socket.on('message', (message) => messages.push(message));
 
-      socket.on('users-changed', (data) => {
+      await socket.on('users-changed', (data) => {
         const user = data.user;
 
         if (data['event'] === 'left') {
@@ -105,16 +109,17 @@ const Chat = ({navigation, route}) => {
     }
   }, [params, roomsService, messageService]);
 
-  const removeSocketsListeners = React.useCallback(() => {
+  const removeSocketsListeners = React.useCallback(async () => {
     //socket.removeAllListeners('message');
     //socket.removeAllListeners('users-changed');
-    //socket.emit('leave-chat-room', {roomId: params, nickname: nicknameStorage});
-    console.log('------');
+    await socket.emit('leave-chat-room', {
+      roomId: params,
+      nickname: nicknameStorage,
+    });
   }, [params, nicknameStorage]);
 
   React.useEffect(() => {
     getMessages();
-    console.log(socket);
 
     return () => {
       removeSocketsListeners();
@@ -126,8 +131,11 @@ const Chat = ({navigation, route}) => {
   }, [navigation, route]);
 
   const onSend = React.useCallback(
-    (initialMessages = []) => {
-      socket.emit('add-message', {text: initialMessages[0].text, room: params});
+    async (initialMessages = []) => {
+      await socket.emit('add-message', {
+        text: initialMessages[0].text,
+        room: params,
+      });
     },
     [params],
   );

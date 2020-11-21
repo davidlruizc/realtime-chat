@@ -31,9 +31,9 @@
                 socket: null,
             },
             methods: {
-                sendMessage() {
+                async sendMessage() {
                     console.log(`send: ${this.text}`);
-                    this.socket.emit('msgToServer', this.text);
+                    await this.socket.emit('add-message', this.text);
                     this.text = "";
                 },
                 receiveMessage(msg) {
@@ -41,9 +41,9 @@
                     this.messages.push(msg);
                 }
             },
-            created() {
+            async created() {
                 this.socket = io('http://localhost:3001', { path: '/websockets' });
-                this.socket.on('msgToClient', (msg) => {
+                await this.socket.on('add-message', (msg) => {
                     console.log(msg);
                     this.receiveMessage(msg);
                 });
