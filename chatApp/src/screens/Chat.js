@@ -1,13 +1,18 @@
 import React from 'react';
 import {GiftedChat} from 'react-native-gifted-chat';
-import io from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import io from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
+const socket = io('http://192.168.0.4:3001', {
+  path: '/websockets',
+  withCredentials: false,
+});
 
 const Chat = ({navigation, route}) => {
   const [messages, setMessages] = React.useState([]);
   const [roomChat, setRoomChat] = React.useState(null);
+  const [nicknameStorage, setNicknameStorage] = React.useState('');
+  const [userID, setUserID] = React.useState('1');
 
   const {params} = route;
 
@@ -29,78 +34,110 @@ const Chat = ({navigation, route}) => {
     }
   }, [params]);
 
-  const messageService = React.useCallback(
-    async (roomData) => {
-      try {
-        const where = {where: JSON.stringify({room: roomData._id})};
-        const room = await fetch(
-          `http://localhost:3000/api/messages/${params}`,
-          {
-            method: 'GET',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
+  const messageService = React.useCallback(async (roomData) => {
+    try {
+      const where = {where: JSON.stringify({room: roomData._id})};
+      const room = await fetch(
+        'http://localhost:3000/api/messages',
+        {where},
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
           },
-        );
+        },
+      );
 
-        const response = room.json();
+      const response = room.json();
 
-        return response;
-      } catch (err) {
-        throw new Error(err);
-      }
-    },
-    [params],
-  );
+      return response;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }, []);
 
   const getMessages = React.useCallback(async () => {
     try {
       const nickName = await AsyncStorage.getItem('nickname');
-      console.log(nickName);
-      socket.emit('enter-chat-room', {params, nickname: nickName});
+      setNicknameStorage(nickName);
+      socket.emit('enter-chat-room', {roomId: params, nickname: nickName});
 
       const room = await roomsService();
 
       setRoomChat(room);
+      const messagesResponse = await messageService(room);
+
+      let chatData = [];
+
+      messagesResponse.forEach((chat) => {
+        if (chat) {
+          const parsed = {
+            _id: chat._id,
+            text: chat.text,
+            createdAt: chat.created,
+            user: {
+              _id: chat.owner._id,
+              name: chat.owner.nickname,
+              avatar: 'https://placeimg.com/140/140/any',
+            },
+          };
+
+          chatData.push(parsed);
+          setUserID(chat.owner._id);
+        }
+      });
+      setMessages(chatData);
+
+      socket.on('message', (message) => messages.push(message));
+
+      socket.on('users-changed', (data) => {
+        const user = data.user;
+
+        if (data['event'] === 'left') {
+          console.log(`User left: ${user}`);
+        } else {
+          console.log(`User joined: ${user}}`);
+        }
+      });
     } catch (err) {
       throw new Error(err);
     }
-  }, [params, roomsService]);
+  }, [params, roomsService, messageService]);
+
+  const removeSocketsListeners = React.useCallback(() => {
+    //socket.removeAllListeners('message');
+    //socket.removeAllListeners('users-changed');
+    //socket.emit('leave-chat-room', {roomId: params, nickname: nicknameStorage});
+    console.log('------');
+  }, [params, nicknameStorage]);
 
   React.useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: 'Hello developer',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'React Native',
-          avatar: 'https://placeimg.com/140/140/any',
-        },
-      },
-    ]);
-
     getMessages();
-  }, [getMessages]);
+    console.log(socket);
+
+    return () => {
+      removeSocketsListeners();
+    };
+  }, [getMessages, removeSocketsListeners]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({headerTitle: 'Room: room 1'});
   }, [navigation, route]);
 
-  const onSend = React.useCallback((initialMessages = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, initialMessages),
-    );
-  }, []);
+  const onSend = React.useCallback(
+    (initialMessages = []) => {
+      socket.emit('add-message', {text: initialMessages[0].text, room: params});
+    },
+    [params],
+  );
 
   return (
     <GiftedChat
       messages={messages}
       onSend={(messages) => onSend(messages)}
       user={{
-        _id: 1,
+        _id: userID,
       }}
     />
   );
