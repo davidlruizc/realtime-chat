@@ -4,7 +4,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
 
 const socket = io('http://localhost:3001', {
-  path: '/websockets',
+  path: '/websockets/',
+  reconnectionDelay: 1000,
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  jsonp: false,
 });
 
 const Chat = ({navigation, route}) => {
@@ -58,11 +62,10 @@ const Chat = ({navigation, route}) => {
 
   const getMessages = React.useCallback(async () => {
     try {
-      //await socket.connected;
       console.log(await socket.connected);
       const nickName = await AsyncStorage.getItem('nickname');
       setNicknameStorage(nickName);
-      await socket.emit('enter-chat-room', {
+      socket.emit('enter-chat-room', {
         roomId: params,
         nickname: nickName,
       });
@@ -93,9 +96,9 @@ const Chat = ({navigation, route}) => {
       });
       setMessages(chatData);
 
-      await socket.on('message', (message) => messages.push(message));
+      socket.on('message', (message) => messages.push(message));
 
-      await socket.on('users-changed', (data) => {
+      socket.on('users-changed', (data) => {
         const user = data.user;
 
         if (data['event'] === 'left') {
@@ -109,10 +112,10 @@ const Chat = ({navigation, route}) => {
     }
   }, [params, roomsService, messageService]);
 
-  const removeSocketsListeners = React.useCallback(async () => {
+  const removeSocketsListeners = React.useCallback(() => {
     //socket.removeAllListeners('message');
     //socket.removeAllListeners('users-changed');
-    await socket.emit('leave-chat-room', {
+    socket.emit('leave-chat-room', {
       roomId: params,
       nickname: nicknameStorage,
     });
@@ -131,8 +134,8 @@ const Chat = ({navigation, route}) => {
   }, [navigation, route]);
 
   const onSend = React.useCallback(
-    async (initialMessages = []) => {
-      await socket.emit('add-message', {
+    (initialMessages = []) => {
+      socket.emit('add-message', {
         text: initialMessages[0].text,
         room: params,
       });

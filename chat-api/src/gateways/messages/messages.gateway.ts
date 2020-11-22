@@ -67,7 +67,6 @@ export class MessagesGateway
 
   @SubscribeMessage('enter-chat-room')
   async enterChatRoom(client: Socket, data: IDataChatRoom): Promise<void> {
-    this.logger.log(data.nickname);
     let user = await this.usersModel.findOne({ nickname: data.nickname });
 
     if (!user) {
@@ -97,11 +96,10 @@ export class MessagesGateway
 
   @SubscribeMessage('add-message')
   async addMessage(client: Socket, message: Message): Promise<void> {
-    this.logger.log(message);
-
     message.owner = await this.usersModel.findOne({ clientId: client.id });
     message.created = new Date();
     message = await this.messagesModel.create(message);
+    this.logger.log(message);
     client.server.in(message.room as string).emit('message', message);
   }
 }
