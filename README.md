@@ -44,6 +44,8 @@ cd db; docker-compose down
 
 Make sure to install `socket.io-client@2.1.1` to avoid bug in socket connection with backend.
 
+Bug report on `socket.io` library [1245-535271575](https://github.com/socketio/socket.io-client/issues/1245#issuecomment-535271575) and [1245-535665760](https://github.com/socketio/socket.io-client/issues/1245#issuecomment-535665760)
+
 - React Native
 
 Run the app acording the OS
