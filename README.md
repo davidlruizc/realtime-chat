@@ -40,6 +40,10 @@ cd db; docker-compose down
 
 ## Mobile App
 
+### Warning!
+
+Make sure to install `socket.io-client@2.1.1` to avoid bug in socket connection with backend.
+
 - React Native
 
 Run the app acording the OS
