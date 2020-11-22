@@ -13,7 +13,6 @@ const socket = io('http://localhost:3001', {
 
 const Chat = ({navigation, route}) => {
   const [messages, setMessages] = React.useState([]);
-  const [roomChat, setRoomChat] = React.useState(null);
   const [nicknameStorage, setNicknameStorage] = React.useState('');
   const [userID, setUserID] = React.useState('1');
 
@@ -62,7 +61,6 @@ const Chat = ({navigation, route}) => {
 
   const getMessages = React.useCallback(async () => {
     try {
-      console.log(await socket.connected);
       const nickName = await AsyncStorage.getItem('nickname');
       setNicknameStorage(nickName);
       socket.emit('enter-chat-room', {
@@ -72,7 +70,6 @@ const Chat = ({navigation, route}) => {
 
       const room = await roomsService();
 
-      setRoomChat(room);
       const messagesResponse = await messageService(room);
 
       let chatData = [];
@@ -101,16 +98,16 @@ const Chat = ({navigation, route}) => {
       socket.on('users-changed', (data) => {
         const user = data.user;
 
-        if (data['event'] === 'left') {
-          console.log(`User left: ${user}`);
-        } else {
-          console.log(`User joined: ${user}}`);
-        }
+        //if (data['event'] === 'left') {
+        //console.log(`User left: ${user}`);
+        //} else {
+        //console.log(`User joined: ${user}}`);
+        //}
       });
     } catch (err) {
       throw new Error(err);
     }
-  }, [params, roomsService, messageService]);
+  }, [params, roomsService, messageService, messages]);
 
   const removeSocketsListeners = React.useCallback(() => {
     //socket.removeAllListeners('message');

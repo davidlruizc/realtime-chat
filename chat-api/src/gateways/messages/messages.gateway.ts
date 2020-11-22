@@ -99,7 +99,6 @@ export class MessagesGateway
     message.owner = await this.usersModel.findOne({ clientId: client.id });
     message.created = new Date();
     message = await this.messagesModel.create(message);
-    this.logger.log(message);
     client.server.in(message.room as string).emit('message', message);
   }
 }
