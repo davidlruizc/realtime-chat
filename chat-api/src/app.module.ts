@@ -8,6 +8,7 @@ import { User } from 'models/user.model';
 import { RoomsController } from './controllers/rooms/rooms.controller';
 import { MessagesController } from './controllers/messages/messages.controller';
 import { MessagesGateway } from 'gateways/messages/messages.gateway';
+import { UsersController } from './controllers/users/users.controller';
 
 @Module({
   imports: [
@@ -17,7 +18,12 @@ import { MessagesGateway } from 'gateways/messages/messages.gateway';
     }),
     TypegooseModule.forFeature([Message, Room, User]),
   ],
-  controllers: [AppController, RoomsController, MessagesController],
+  controllers: [
+    AppController,
+    RoomsController,
+    MessagesController,
+    UsersController,
+  ],
   providers: [AppService, MessagesGateway],
 })
 export class AppModule {}

@@ -76,7 +76,9 @@ export class MessagesGateway
       });
     } else {
       user.clientId = client.id;
-      user = await this.usersModel.findOneAndUpdate(user._id, { new: true });
+      user = await this.usersModel.findByIdAndUpdate(user._id, user, {
+        new: true,
+      });
     }
     client
       .join(data.roomId)

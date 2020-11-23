@@ -6,7 +6,7 @@ import { Room } from 'models/room.model';
 export class User {
   _id: ObjectId | string;
 
-  @prop({ required: true, maxlength: 20, minlength: 5 })
+  @prop({ required: true, maxlength: 20, minlength: 1 })
   nickname: string;
 
   @prop({ required: true })

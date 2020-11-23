@@ -1,4 +1,5 @@
 import React from 'react';
+import {View} from 'react-native';
 import {GiftedChat} from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
@@ -17,6 +18,24 @@ const Chat = ({navigation, route}) => {
   const [userID, setUserID] = React.useState('1');
 
   const {params} = route;
+
+  const userService = React.useCallback(async (nickname) => {
+    try {
+      const user = await fetch(`http://localhost:3000/api/users/${nickname}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const response = user.json();
+
+      return response;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }, []);
 
   const roomsService = React.useCallback(async () => {
     try {
@@ -92,6 +111,8 @@ const Chat = ({navigation, route}) => {
         }
       });
       setMessages(chatData);
+      const user = await userService(nickName);
+      setUserID(user._id);
 
       socket.on('message', (message) => messages.push(message));
 
@@ -110,8 +131,6 @@ const Chat = ({navigation, route}) => {
   }, [params, roomsService, messageService, messages]);
 
   const removeSocketsListeners = React.useCallback(() => {
-    //socket.removeAllListeners('message');
-    //socket.removeAllListeners('users-changed');
     socket.emit('leave-chat-room', {
       roomId: params,
       nickname: nicknameStorage,
@@ -144,6 +163,7 @@ const Chat = ({navigation, route}) => {
     <GiftedChat
       messages={messages}
       onSend={(messages) => onSend(messages)}
+      renderLoading={() => <View style={{flex: 1}} />}
       user={{
         _id: userID,
       }}
