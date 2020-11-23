@@ -21,27 +21,8 @@ const socket = io(SOCKET_URI, {
 const Chat = ({navigation, route}) => {
   const [messages, setMessages] = React.useState([]);
   const [nicknameStorage, setNicknameStorage] = React.useState('');
-  const [userID, setUserID] = React.useState('1');
 
   const {params} = route;
-
-  const userService = React.useCallback(async (nickname) => {
-    try {
-      const user = await fetch(`${API_URI}/api/users/${nickname}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const response = user.json();
-
-      return response;
-    } catch (err) {
-      throw new Error(err);
-    }
-  }, []);
 
   const roomsService = React.useCallback(async () => {
     try {
@@ -117,9 +98,6 @@ const Chat = ({navigation, route}) => {
       });
       setMessages(chatData);
 
-      const userWithID = await userService(nickName);
-      setUserID(userWithID._id);
-
       socket.on('message', (message) => messages.push(message));
 
       socket.on('users-changed', (data) => {
@@ -135,7 +113,7 @@ const Chat = ({navigation, route}) => {
     } catch (err) {
       throw new Error(err);
     }
-  }, [params, roomsService, messageService, userService, messages]);
+  }, [params, roomsService, messageService, messages]);
 
   const removeSocketsListeners = React.useCallback(() => {
     socket.emit('leave-chat-room', {

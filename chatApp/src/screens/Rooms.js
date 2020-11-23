@@ -6,9 +6,13 @@ import {
   Text,
   StatusBar,
   Button,
+  Platform,
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {useNavigation} from '@react-navigation/native';
+
+const API_URI =
+  Platform.OS === 'ios' ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
 
 const Rooms = () => {
   const ROOM_NAME = 'room1';
@@ -18,7 +22,7 @@ const Rooms = () => {
 
   const addRoom = async () => {
     try {
-      const room = await fetch('http://localhost:3000/api/rooms', {
+      const room = await fetch(`${API_URI}/api/rooms`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
