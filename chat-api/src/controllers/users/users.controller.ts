@@ -9,7 +9,6 @@ export class UsersController {
 
   @Get('/:nickname')
   findByNickname(@Param('nickname') nickname: string) {
-    console.log(nickname);
     return this.userModel.findOne({ nickname });
   }
 }

@@ -1,10 +1,16 @@
 import React from 'react';
-import {View} from 'react-native';
+import {View, Platform} from 'react-native';
 import {GiftedChat} from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:3001', {
+const SOCKET_URI =
+  Platform.OS === 'ios' ? 'http://localhost:3001' : 'http://10.0.2.2:3001';
+
+const API_URI =
+  Platform.OS === 'ios' ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+
+const socket = io(SOCKET_URI, {
   path: '/websockets/',
   reconnectionDelay: 1000,
   reconnection: true,
@@ -21,7 +27,7 @@ const Chat = ({navigation, route}) => {
 
   const userService = React.useCallback(async (nickname) => {
     try {
-      const user = await fetch(`http://localhost:3000/api/users/${nickname}`, {
+      const user = await fetch(`${API_URI}/api/users/${nickname}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -39,7 +45,7 @@ const Chat = ({navigation, route}) => {
 
   const roomsService = React.useCallback(async () => {
     try {
-      const room = await fetch(`http://localhost:3000/api/rooms/${params}`, {
+      const room = await fetch(`${API_URI}/api/rooms/${params}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -59,7 +65,7 @@ const Chat = ({navigation, route}) => {
     try {
       const where = {where: JSON.stringify({room: roomData._id})};
       const room = await fetch(
-        'http://localhost:3000/api/messages',
+        `${API_URI}/api/messages`,
         {where},
         {
           method: 'GET',
@@ -107,16 +113,17 @@ const Chat = ({navigation, route}) => {
           };
 
           chatData.push(parsed);
-          setUserID(chat.owner._id);
         }
       });
       setMessages(chatData);
-      const user = await userService(nickName);
-      setUserID(user._id);
+
+      const userWithID = await userService(nickName);
+      setUserID(userWithID._id);
 
       socket.on('message', (message) => messages.push(message));
 
       socket.on('users-changed', (data) => {
+        // add event when user status change
         const user = data.user;
 
         //if (data['event'] === 'left') {
@@ -128,7 +135,7 @@ const Chat = ({navigation, route}) => {
     } catch (err) {
       throw new Error(err);
     }
-  }, [params, roomsService, messageService, messages]);
+  }, [params, roomsService, messageService, userService, messages]);
 
   const removeSocketsListeners = React.useCallback(() => {
     socket.emit('leave-chat-room', {
@@ -161,11 +168,17 @@ const Chat = ({navigation, route}) => {
 
   return (
     <GiftedChat
+      alignTop
+      alwaysShowSend
+      scrollToBottom
+      renderAvatarOnTop
+      renderUsernameOnMessage
+      inverted={false}
       messages={messages}
       onSend={(messages) => onSend(messages)}
       renderLoading={() => <View style={{flex: 1}} />}
       user={{
-        _id: userID,
+        _id: 1,
       }}
     />
   );
